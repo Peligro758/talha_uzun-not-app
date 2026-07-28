@@ -234,6 +234,24 @@ details summary { cursor: pointer; margin-top: 12px; color: var(--muted); font-s
 .subs-overview { display: flex; flex-direction: column; gap: 10px; }
 .subs-row { font-size: 14px; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
 
+/* ================= Dil anahtarı ================= */
+.lang-switch { display: flex; gap: 10px; }
+.langbtn {
+  flex: 1;
+  padding: 11px 14px;
+  background: var(--bg-soft);
+  border: 1px solid var(--border);
+  color: var(--muted);
+  border-radius: var(--radius-sm);
+  font-weight: 600;
+}
+.langbtn:hover { color: var(--text); border-color: var(--primary); }
+.langbtn.active {
+  background: var(--primary-soft);
+  color: var(--primary);
+  border-color: var(--primary);
+}
+
 /* ================= FAB ================= */
 .fab {
   position: fixed;

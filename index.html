@@ -17,10 +17,10 @@
       <img class="brand-mark" src="icon.svg" alt="" width="28" height="28" />
       <h1>Talha Uzun</h1>
     </div>
-    <nav class="tabs" aria-label="Ana gezinme">
-      <button class="tab active" data-view="notes">Notlar</button>
-      <button class="tab" data-view="brief">Brifing</button>
-      <button class="tab" data-view="settings">Yedek</button>
+    <nav class="tabs" aria-label="Navigation">
+      <button class="tab active" data-view="notes" data-i18n="nav_notes">Notlar</button>
+      <button class="tab" data-view="brief" data-i18n="nav_brief">Brifing</button>
+      <button class="tab" data-view="settings" data-i18n="nav_settings">Yedek</button>
     </nav>
   </header>
 
@@ -28,45 +28,45 @@
     <!-- ================= NOTLAR ================= -->
     <section id="view-notes" class="view active">
       <form id="note-form" class="card">
-        <h2 id="form-title">Yeni not</h2>
+        <h2 id="form-title" data-i18n="form_new">Yeni not</h2>
         <input type="hidden" id="note-id" />
         <div class="row">
           <label>
-            Kategori
+            <span class="lbl-txt" data-i18n="lbl_category">Kategori</span>
             <select id="f-category">
-              <option value="is">İş</option>
-              <option value="okul">Okul</option>
-              <option value="hayat">Hayat</option>
+              <option value="is" data-i18n="cat_is">İş</option>
+              <option value="okul" data-i18n="cat_okul">Okul</option>
+              <option value="hayat" data-i18n="cat_hayat">Hayat</option>
             </select>
           </label>
           <label>
-            Alt-kategori
+            <span class="lbl-txt" data-i18n="lbl_subcategory">Alt-kategori</span>
             <input id="f-subcategory" list="subs-list" autocomplete="off"
-                   placeholder="ör. Baykar" />
+                   data-i18n-ph="ph_subcategory" placeholder="ör. Baykar" />
             <datalist id="subs-list"></datalist>
           </label>
           <label>
-            Hatırlatma (ops.)
+            <span class="lbl-txt" data-i18n="lbl_reminder">Hatırlatma (ops.)</span>
             <input type="date" id="f-reminder" />
           </label>
         </div>
         <label>
-          Not
-          <textarea id="f-text" rows="4" placeholder="Notun…"></textarea>
+          <span class="lbl-txt" data-i18n="lbl_note">Not</span>
+          <textarea id="f-text" rows="4" data-i18n-ph="ph_note" placeholder="Notun…"></textarea>
         </label>
         <div class="form-actions">
-          <button type="submit" class="primary" id="save-btn">Ekle</button>
-          <button type="button" id="cancel-edit" class="ghost hidden">Vazgeç</button>
+          <button type="submit" class="primary" id="save-btn" data-i18n="btn_add">Ekle</button>
+          <button type="button" id="cancel-edit" class="ghost hidden" data-i18n="btn_cancel">Vazgeç</button>
         </div>
       </form>
 
       <div class="filters">
-        <input id="search" type="search" placeholder="🔎 Ara…" />
+        <input id="search" type="search" data-i18n-ph="ph_search" placeholder="🔎 Ara…" />
         <select id="filter-category">
-          <option value="">Tüm kategoriler</option>
-          <option value="is">İş</option>
-          <option value="okul">Okul</option>
-          <option value="hayat">Hayat</option>
+          <option value="" data-i18n="filter_all">Tüm kategoriler</option>
+          <option value="is" data-i18n="cat_is">İş</option>
+          <option value="okul" data-i18n="cat_okul">Okul</option>
+          <option value="hayat" data-i18n="cat_hayat">Hayat</option>
         </select>
       </div>
 
@@ -76,35 +76,36 @@
     <!-- ================= BRIFING ================= -->
     <section id="view-brief" class="view">
       <div class="card">
-        <h2>Sabah brifingi</h2>
-        <p class="muted">
+        <h2 data-i18n="brief_h2">Sabah brifingi</h2>
+        <p class="muted" data-i18n-html="brief_intro">
           "Brifing hazırla" düğmesi notlarından bir metin üretip <b>panoya kopyalar</b>
           ve <b>claude.ai</b>'yi açar. Oraya yapıştır (Cmd+V), Claude brifingi yazsın;
           sonra sonucu aşağıya geri yapıştırıp kaydet.
         </p>
         <div class="form-actions">
-          <button id="prep-btn" class="primary">Brifing hazırla · panoya kopyala</button>
-          <button id="open-claude" class="ghost">claude.ai'yi aç</button>
+          <button id="prep-btn" class="primary" data-i18n="btn_prep">Brifing hazırla · panoya kopyala</button>
+          <button id="open-claude" class="ghost" data-i18n="btn_open_claude">claude.ai'yi aç</button>
         </div>
         <div id="prep-status" class="status hidden"></div>
         <details id="payload-details" class="hidden">
-          <summary>Kopyalanan metni göster</summary>
+          <summary data-i18n="sum_show_copied">Kopyalanan metni göster</summary>
           <pre id="payload-preview" class="payload"></pre>
         </details>
       </div>
 
       <div class="card">
-        <h3>Bugünün brifingini kaydet</h3>
+        <h3 data-i18n="brief_save_h3">Bugünün brifingini kaydet</h3>
         <textarea id="brief-paste" rows="8"
+          data-i18n-ph="ph_brief_paste"
           placeholder="Claude'un yazdığı brifingi buraya yapıştır…"></textarea>
         <div class="form-actions">
-          <button id="save-brief" class="primary">Bugünün brifingi olarak kaydet</button>
+          <button id="save-brief" class="primary" data-i18n="btn_save_brief">Bugünün brifingi olarak kaydet</button>
         </div>
         <div id="brief-save-status" class="status hidden"></div>
       </div>
 
       <div class="card">
-        <h3>Brifing arşivi</h3>
+        <h3 data-i18n="brief_arch_h3">Brifing arşivi</h3>
         <div id="brief-archive" class="archive"></div>
       </div>
     </section>
@@ -112,23 +113,33 @@
     <!-- ================= YEDEK ================= -->
     <section id="view-settings" class="view">
       <div class="card">
-        <h2>Yedekleme</h2>
-        <p class="muted">
+        <h2 data-i18n="bk_h2">Yedekleme</h2>
+        <p class="muted" data-i18n-html="bk_intro">
           Veriler yalnızca bu cihazın tarayıcısında tutulur. Düzenli olarak dışa
           aktarıp yedekle — özellikle telefonda (iOS uzun süre açılmayan uygulamanın
           verisini silebilir).
         </p>
         <div class="form-actions">
-          <button id="export-btn" class="primary">Dışa aktar (.json indir)</button>
+          <button id="export-btn" class="primary" data-i18n="btn_export">Dışa aktar (.json indir)</button>
           <label class="filebtn ghost">
-            İçe aktar (.json)
+            <span data-i18n="btn_import">İçe aktar (.json)</span>
             <input type="file" id="import-file" accept="application/json" hidden />
           </label>
         </div>
         <div id="backup-status" class="status hidden"></div>
       </div>
+
       <div class="card">
-        <h3>Bilinen alt-kategoriler</h3>
+        <h3 data-i18n="lang_h3">Dil / Language</h3>
+        <p class="muted" data-i18n="lang_hint">Uygulama dilini seç. Brifing metni de seçilen dilde üretilir.</p>
+        <div class="lang-switch">
+          <button class="langbtn" data-lang="tr">Türkçe</button>
+          <button class="langbtn" data-lang="en">English</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3 data-i18n="subs_h3">Bilinen alt-kategoriler</h3>
         <div id="subs-overview" class="subs-overview"></div>
       </div>
     </section>
@@ -141,21 +152,21 @@
   </button>
 
   <!-- Alt gezinme çubuğu (mobil) -->
-  <nav class="bottomnav" aria-label="Alt gezinme">
+  <nav class="bottomnav" aria-label="Bottom navigation">
     <button class="navbtn active" data-view="notes">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"
            stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h16M4 18h10"/></svg>
-      <span>Notlar</span>
+      <span data-i18n="nav_notes">Notlar</span>
     </button>
     <button class="navbtn" data-view="brief">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"
            stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M19.1 4.9l-1.4 1.4M6.3 17.7l-1.4 1.4"/></svg>
-      <span>Brifing</span>
+      <span data-i18n="nav_brief">Brifing</span>
     </button>
     <button class="navbtn" data-view="settings">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"
            stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M8 11l4 4 4-4M4 21h16"/></svg>
-      <span>Yedek</span>
+      <span data-i18n="nav_settings">Yedek</span>
     </button>
   </nav>
 
@@ -164,8 +175,8 @@
     <div class="modal-box">
       <p id="modal-msg"></p>
       <div class="form-actions">
-        <button id="modal-ok" class="primary">Tamam</button>
-        <button id="modal-cancel" class="ghost">Vazgeç</button>
+        <button id="modal-ok" class="primary" data-i18n="m_ok_default">Tamam</button>
+        <button id="modal-cancel" class="ghost" data-i18n="btn_cancel">Vazgeç</button>
       </div>
     </div>
   </div>

@@ -2,7 +2,6 @@
 
 import {
   CATEGORIES,
-  CATEGORY_LABELS,
   newUlid,
   openDb,
   allNotes,
@@ -20,6 +19,7 @@ import {
 } from "./db.js";
 import { buildPayload, todayStr } from "./brifing.js";
 import { SEED } from "./seed.js";
+import { t, catLabel, getLang, setLang } from "./i18n.js";
 
 const $ = (sel) => document.querySelector(sel);
 const $$ = (sel) => [...document.querySelectorAll(sel)];
@@ -34,11 +34,11 @@ function toast(msg) {
   toastTimer = setTimeout(() => t.classList.add("hidden"), 2600);
 }
 
-function confirmModal(msg, okLabel = "Tamam") {
+function confirmModal(msg, okLabel) {
   return new Promise((resolve) => {
     const modal = $("#modal");
     $("#modal-msg").textContent = msg;
-    $("#modal-ok").textContent = okLabel;
+    $("#modal-ok").textContent = okLabel || t("m_ok_default");
     modal.classList.remove("hidden");
     const cleanup = (val) => {
       modal.classList.add("hidden");
@@ -55,6 +55,45 @@ function escapeHtml(s) {
   return (s || "").replace(/[&<>"']/g, (c) => ({
     "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
   }[c]));
+}
+
+// --- i18n: statik metinleri uygula ----------------------------------------
+function applyStaticI18n() {
+  document.documentElement.lang = getLang();
+  $$("[data-i18n]").forEach((el) => {
+    el.textContent = t(el.dataset.i18n);
+  });
+  $$("[data-i18n-ph]").forEach((el) => {
+    el.setAttribute("placeholder", t(el.dataset.i18nPh));
+  });
+  $$("[data-i18n-html]").forEach((el) => {
+    el.innerHTML = t(el.dataset.i18nHtml);
+  });
+  const fab = $("#fab");
+  if (fab) {
+    fab.setAttribute("aria-label", t("form_new"));
+    fab.setAttribute("title", t("form_new"));
+  }
+  updateLangButtons();
+}
+
+function updateLangButtons() {
+  const lang = getLang();
+  $$(".langbtn").forEach((b) =>
+    b.classList.toggle("active", b.dataset.lang === lang)
+  );
+}
+
+async function changeLang(lang) {
+  if (lang === getLang()) return;
+  setLang(lang);
+  applyStaticI18n();
+  // Dinamik içerikleri yeniden çiz (etiketler dile bağlı).
+  resetForm();
+  await refreshSubsDatalist();
+  await renderNotes();
+  await renderArchive();
+  await renderSubsOverview();
 }
 
 // --- Sekmeler (üst + alt gezinme birlikte) --------------------------------
@@ -104,8 +143,8 @@ function resetForm() {
   $("#f-subcategory").value = "";
   $("#f-reminder").value = "";
   $("#f-text").value = "";
-  $("#form-title").textContent = "Yeni not";
-  $("#save-btn").textContent = "Ekle";
+  $("#form-title").textContent = t("form_new");
+  $("#save-btn").textContent = t("btn_add");
   $("#cancel-edit").classList.add("hidden");
 }
 
@@ -117,16 +156,13 @@ async function onSubmitNote(e) {
   const reminder = $("#f-reminder").value || null;
   const text = $("#f-text").value.trim();
 
-  if (!subcategory) return toast("Alt-kategori boş olamaz.");
-  if (!text) return toast("Not boş olamaz.");
+  if (!subcategory) return toast(t("t_sub_empty"));
+  if (!text) return toast(t("t_note_empty"));
 
   // Yeni alt-kategori onayı (yazım tutarlılığı için).
   const subs = await getKnownSubs();
   if (!(subs[category] || []).includes(subcategory)) {
-    const ok = await confirmModal(
-      `'${subcategory}' bu kategoride yeni. Bilinenlere ekleyeyim mi?`,
-      "Ekle"
-    );
+    const ok = await confirmModal(t("m_new_sub", { sub: subcategory }), t("m_ok_add"));
     if (!ok) return; // vazgeçildi
     await addKnownSub(category, subcategory);
   }
@@ -134,7 +170,7 @@ async function onSubmitNote(e) {
   if (id) {
     const existing = await getNote(id);
     await putNote({ ...existing, category, subcategory, reminder, text });
-    toast("Not güncellendi.");
+    toast(t("t_note_updated"));
   } else {
     await putNote({
       id: newUlid(),
@@ -144,7 +180,7 @@ async function onSubmitNote(e) {
       reminder,
       text,
     });
-    toast("Not eklendi.");
+    toast(t("t_note_added"));
   }
   resetForm();
   await refreshSubsDatalist();
@@ -160,17 +196,17 @@ async function startEdit(id) {
   $("#f-subcategory").value = n.subcategory;
   $("#f-reminder").value = n.reminder || "";
   $("#f-text").value = n.text;
-  $("#form-title").textContent = "Notu düzenle";
-  $("#save-btn").textContent = "Kaydet";
+  $("#form-title").textContent = t("form_edit");
+  $("#save-btn").textContent = t("btn_save");
   $("#cancel-edit").classList.remove("hidden");
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
 async function removeNote(id) {
-  const ok = await confirmModal("Bu not silinsin mi?", "Sil");
+  const ok = await confirmModal(t("m_del_note"), t("m_ok_del"));
   if (!ok) return;
   await deleteNote(id);
-  toast("Not silindi.");
+  toast(t("t_note_deleted"));
   await renderNotes();
 }
 
@@ -179,7 +215,7 @@ async function completeReminder(id) {
   const n = await getNote(id);
   if (!n) return;
   await putNote({ ...n, reminder: null });
-  toast("Hatırlatma tamamlandı.");
+  toast(t("t_rem_done"));
   await renderNotes();
 }
 
@@ -205,26 +241,26 @@ async function renderNotes() {
     const filtering = q || catFilter;
     list.innerHTML = filtering
       ? `<div class="empty"><div class="empty-ico">🔎</div>
-           <p class="empty-title">Eşleşen not yok</p>
-           <p class="muted">Aramayı veya kategori filtresini değiştir.</p></div>`
+           <p class="empty-title">${t("empty_search_t")}</p>
+           <p class="muted">${t("empty_search_h")}</p></div>`
       : `<div class="empty"><div class="empty-ico">📝</div>
-           <p class="empty-title">Henüz not yok</p>
-           <p class="muted">Yukarıdaki formdan ya da sağ alttaki <b>+</b> ile ekle.</p></div>`;
+           <p class="empty-title">${t("empty_notes_t")}</p>
+           <p class="muted">${t("empty_notes_h")}</p></div>`;
     return;
   }
   list.innerHTML = filtered
     .map((n) => {
-      const cat = CATEGORY_LABELS[n.category] || n.category;
+      const cat = catLabel(n.category);
       let remBadge = "";
       let completeBtn = "";
       if (n.reminder) {
         const overdue = n.reminder < today;
         const dueToday = n.reminder === today;
         const cls = overdue ? "overdue" : dueToday ? "due" : "";
-        const tag = overdue ? " · geçti" : dueToday ? " · bugün" : "";
+        const tag = overdue ? t("tag_overdue") : dueToday ? t("tag_today") : "";
         remBadge = `<span class="badge ${cls}">⏰ ${n.reminder}${tag}</span>`;
         if (n.reminder <= today) {
-          completeBtn = `<button class="mini ok" data-done="${n.id}">Tamamla</button>`;
+          completeBtn = `<button class="mini ok" data-done="${n.id}">${t("btn_complete")}</button>`;
         }
       }
       return `
@@ -237,8 +273,8 @@ async function renderNotes() {
         <div class="note-text">${escapeHtml(n.text)}</div>
         <div class="note-actions">
           ${completeBtn}
-          <button class="mini" data-edit="${n.id}">Düzenle</button>
-          <button class="mini danger" data-del="${n.id}">Sil</button>
+          <button class="mini" data-edit="${n.id}">${t("btn_edit")}</button>
+          <button class="mini danger" data-del="${n.id}">${t("btn_delete")}</button>
         </div>
       </div>`;
     })
@@ -276,13 +312,10 @@ async function prepareBriefing() {
   }
 
   if (!hasContent) {
-    status.innerHTML =
-      "Son 7 günde not yok ve bugüne düşen hatırlatma yok — önce birkaç not ekle.";
+    status.innerHTML = t("st_no_content");
     return;
   }
-  status.innerHTML = copied
-    ? "✓ Metin <b>panoya kopyalandı</b>. Şimdi claude.ai'yi aç, Cmd+V yapıştır, Enter."
-    : "Panoya kopyalanamadı — aşağıdaki metni elle kopyala.";
+  status.innerHTML = copied ? t("st_copied") : t("st_copy_fail");
   if (copied) openClaude();
 }
 
@@ -292,21 +325,18 @@ function openClaude() {
 
 async function saveBriefing() {
   const text = $("#brief-paste").value.trim();
-  if (!text) return toast("Kaydedilecek brifing metni boş.");
+  if (!text) return toast(t("t_brief_empty"));
   const today = todayStr();
   const existing = await getBriefing(today);
   if (existing) {
-    const ok = await confirmModal(
-      "Bugün için zaten bir brifing kayıtlı. Üzerine yazayım mı?",
-      "Üzerine yaz"
-    );
+    const ok = await confirmModal(t("m_brief_overwrite"), t("m_ok_overwrite"));
     if (!ok) return;
   }
   await putBriefing(today, text);
   $("#brief-paste").value = "";
   $("#brief-save-status").classList.remove("hidden");
-  $("#brief-save-status").textContent = `✓ ${today} brifingi kaydedildi.`;
-  toast("Brifing kaydedildi.");
+  $("#brief-save-status").textContent = t("st_saved", { date: today });
+  toast(t("t_brief_saved"));
   await renderArchive();
 }
 
@@ -316,8 +346,8 @@ async function renderArchive() {
   const box = $("#brief-archive");
   if (!briefings.length) {
     box.innerHTML = `<div class="empty"><div class="empty-ico">☀️</div>
-        <p class="empty-title">Henüz brifing yok</p>
-        <p class="muted">Yukarıdan bir brifing hazırlayıp kaydet.</p></div>`;
+        <p class="empty-title">${t("empty_brief_t")}</p>
+        <p class="muted">${t("empty_brief_h")}</p></div>`;
     return;
   }
   box.innerHTML = briefings
@@ -366,7 +396,7 @@ async function exportBackup() {
   a.download = `not-yedek-${todayStr()}.json`;
   a.click();
   URL.revokeObjectURL(url);
-  toast("Yedek indirildi.");
+  toast(t("t_exported"));
 }
 
 async function importBackup(file) {
@@ -374,15 +404,14 @@ async function importBackup(file) {
     const obj = JSON.parse(await file.text());
     const res = await importData(obj, { merge: true });
     $("#backup-status").classList.remove("hidden");
-    $("#backup-status").textContent =
-      `✓ İçe aktarıldı: ${res.notes} not, ${res.briefings} brifing.`;
-    toast("İçe aktarıldı.");
+    $("#backup-status").textContent = t("st_import", { n: res.notes, m: res.briefings });
+    toast(t("t_imported"));
     await refreshSubsDatalist();
     await renderNotes();
     await renderArchive();
     await renderSubsOverview();
   } catch (err) {
-    toast("Dosya okunamadı — geçerli bir JSON mu?");
+    toast(t("t_import_fail"));
   }
 }
 
@@ -390,7 +419,7 @@ async function renderSubsOverview() {
   const subs = await getKnownSubs();
   $("#subs-overview").innerHTML = CATEGORIES.map((c) => {
     const vals = (subs[c] || []).map((s) => `<span class="chip chip-${c}">${escapeHtml(s)}</span>`).join(" ");
-    return `<div class="subs-row"><b>${CATEGORY_LABELS[c]}:</b> ${vals || "<span class=\"muted\">(boş)</span>"}</div>`;
+    return `<div class="subs-row"><b>${catLabel(c)}:</b> ${vals || `<span class="muted">${t("subs_empty")}</span>`}</div>`;
   }).join("");
 }
 
@@ -406,9 +435,14 @@ async function init() {
   await openDb();
   await seedIfEmpty(SEED);
 
+  applyStaticI18n();
+
   setupTabs();
   document.body.dataset.view = "notes";
   $("#fab").onclick = newNoteQuick;
+  $$(".langbtn").forEach((b) => {
+    b.onclick = () => changeLang(b.dataset.lang);
+  });
   $("#note-form").addEventListener("submit", onSubmitNote);
   $("#cancel-edit").onclick = resetForm;
   $("#f-category").addEventListener("change", refreshSubsDatalist);

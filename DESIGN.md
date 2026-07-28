@@ -45,10 +45,37 @@ açılabilecek şekilde temiz bırakılır ama şimdilik tek kullanıcı.
   (kaçırılan hatırlatmalar "Bugün"de kalır). Not listesinde "geçti/bugün" rozeti +
   hatırlatmayı temizleyen "Tamamla" düğmesi eklendi.
 
+## 🎨 Tasarım yenileme (2026-07-28, grilling)
+
+Yön: **kişisel + cilalı** (backend/login yok kalır). Uygulananlar:
+
+- **Rafine koyu tema:** daha derin zemin, yumuşak kenarlıklar/gölgeler, odak halkası,
+  daha iyi tipografi/boşluk. Açık tema da elden geçti.
+- **Vurgu rengi indigo `#6366f1`** (zaten primary'di; tema buna göre hizalandı).
+- **Hibrit gezinme:** mobilde alt çubuk (`.bottomnav`, 3 `.navbtn`) + sağ-alt FAB (`#fab`,
+  "yeni not"); masaüstünde üst `.tabs`. İkisi de `data-view` taşır, `switchView()` her ikisini
+  senkron tutar. Breakpoint 700px.
+- **TU monogram ikon seti** (PIL ile üretildi, `make_icons.py`): `icon-192/512.png`,
+  `icon-192/512-maskable.png`, `apple-touch-icon.png` (180, full-bleed → iOS gereği),
+  `favicon-32.png` + `icon.svg` (TU). Manifest çoklu PNG'ye güncellendi. → iOS apple-touch
+  maddesi TAMAM.
+- **Boş-durum ekranları** (ikon + başlık + ipucu), view/kart/not animasyonları, toast/modal
+  geçişleri, mobilde büyütülmüş dokunmatik hedefleri.
+- **sw cache → v3** (yeni PNG'ler asset listesine eklendi).
+- Yerel test uçtan uca geçti (DOM/JS ile; `Page.captureScreenshot` CDP donması yüzünden
+  görsel screenshot alınamadı — sayfa sağlıklı, konsol temiz).
+
+Parkedildi: cihazlar arası senkron (Cloudflare Worker — ücretsiz ama Talha maliyet
+tereddüdüyle erteledi) ve gerçek hatırlatma/bildirim (iPhone PWA'da web push güvenilmez →
+en sağlamı `.ics` takvim). Sıradaki turlar.
+
 ## 🔮 İleride
 
+- [ ] **Cihazlar arası senkron** — hesapsız "sync-kodu" (Cloudflare Worker + KV, ücretsiz) veya
+  ağrısız QR/Dosyalar. Grill'de parkedildi.
+- [ ] **Gerçek hatırlatma** — iPhone için `.ics` "Takvime ekle" (en sağlamı); Android/masaüstü
+  için Notification API.
 - [ ] API anahtarı gelince "otomatik brifing" modu (ayar → `fetch` ile Anthropic).
 - [ ] Faz 3 (uzun vadeli örüntü/yansıtma analizi) — bkz. eski `hatirlatici.md`.
-- [ ] Çok-cihaz senkron (backend veya Supabase) — gerekirse.
 - [ ] `reminder`'ı tek tarihten diziye yükselt.
-- [ ] iOS için düzgün `apple-touch-icon` (png).
+- [x] iOS için düzgün `apple-touch-icon` (png). ✅ 2026-07-28
