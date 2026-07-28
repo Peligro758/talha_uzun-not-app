@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#0f172a" />
+  <title>Not Sistemi</title>
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="apple-touch-icon" href="icons/icon.svg" />
+  <link rel="icon" href="icons/icon.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <h1>📒 Not Sistemi</h1>
+    <nav class="tabs">
+      <button class="tab active" data-view="notes">Notlar</button>
+      <button class="tab" data-view="brief">Brifing</button>
+      <button class="tab" data-view="settings">Yedek</button>
+    </nav>
+  </header>
+
+  <main>
+    <!-- ================= NOTLAR ================= -->
+    <section id="view-notes" class="view active">
+      <form id="note-form" class="card">
+        <h2 id="form-title">Yeni not</h2>
+        <input type="hidden" id="note-id" />
+        <div class="row">
+          <label>
+            Kategori
+            <select id="f-category">
+              <option value="is">İş</option>
+              <option value="okul">Okul</option>
+              <option value="hayat">Hayat</option>
+            </select>
+          </label>
+          <label>
+            Alt-kategori
+            <input id="f-subcategory" list="subs-list" autocomplete="off"
+                   placeholder="ör. Baykar" />
+            <datalist id="subs-list"></datalist>
+          </label>
+          <label>
+            Hatırlatma (ops.)
+            <input type="date" id="f-reminder" />
+          </label>
+        </div>
+        <label>
+          Not
+          <textarea id="f-text" rows="4" placeholder="Notun…"></textarea>
+        </label>
+        <div class="form-actions">
+          <button type="submit" class="primary" id="save-btn">Ekle</button>
+          <button type="button" id="cancel-edit" class="ghost hidden">Vazgeç</button>
+        </div>
+      </form>
+
+      <div class="filters">
+        <input id="search" type="search" placeholder="🔎 Ara…" />
+        <select id="filter-category">
+          <option value="">Tüm kategoriler</option>
+          <option value="is">İş</option>
+          <option value="okul">Okul</option>
+          <option value="hayat">Hayat</option>
+        </select>
+      </div>
+
+      <div id="notes-list" class="notes-list"></div>
+    </section>
+
+    <!-- ================= BRIFING ================= -->
+    <section id="view-brief" class="view">
+      <div class="card">
+        <h2>Sabah brifingi</h2>
+        <p class="muted">
+          "Brifing hazırla" düğmesi notlarından bir metin üretip <b>panoya kopyalar</b>
+          ve <b>claude.ai</b>'yi açar. Oraya yapıştır (Cmd+V), Claude brifingi yazsın;
+          sonra sonucu aşağıya geri yapıştırıp kaydet.
+        </p>
+        <div class="form-actions">
+          <button id="prep-btn" class="primary">Brifing hazırla · panoya kopyala</button>
+          <button id="open-claude" class="ghost">claude.ai'yi aç</button>
+        </div>
+        <div id="prep-status" class="status hidden"></div>
+        <details id="payload-details" class="hidden">
+          <summary>Kopyalanan metni göster</summary>
+          <pre id="payload-preview" class="payload"></pre>
+        </details>
+      </div>
+
+      <div class="card">
+        <h3>Bugünün brifingini kaydet</h3>
+        <textarea id="brief-paste" rows="8"
+          placeholder="Claude'un yazdığı brifingi buraya yapıştır…"></textarea>
+        <div class="form-actions">
+          <button id="save-brief" class="primary">Bugünün brifingi olarak kaydet</button>
+        </div>
+        <div id="brief-save-status" class="status hidden"></div>
+      </div>
+
+      <div class="card">
+        <h3>Brifing arşivi</h3>
+        <div id="brief-archive" class="archive"></div>
+      </div>
+    </section>
+
+    <!-- ================= YEDEK ================= -->
+    <section id="view-settings" class="view">
+      <div class="card">
+        <h2>Yedekleme</h2>
+        <p class="muted">
+          Veriler yalnızca bu cihazın tarayıcısında tutulur. Düzenli olarak dışa
+          aktarıp yedekle — özellikle telefonda (iOS uzun süre açılmayan uygulamanın
+          verisini silebilir).
+        </p>
+        <div class="form-actions">
+          <button id="export-btn" class="primary">Dışa aktar (.json indir)</button>
+          <label class="filebtn ghost">
+            İçe aktar (.json)
+            <input type="file" id="import-file" accept="application/json" hidden />
+          </label>
+        </div>
+        <div id="backup-status" class="status hidden"></div>
+      </div>
+      <div class="card">
+        <h3>Bilinen alt-kategoriler</h3>
+        <div id="subs-overview" class="subs-overview"></div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Onay/uyarı için hafif modal -->
+  <div id="modal" class="modal hidden">
+    <div class="modal-box">
+      <p id="modal-msg"></p>
+      <div class="form-actions">
+        <button id="modal-ok" class="primary">Tamam</button>
+        <button id="modal-cancel" class="ghost">Vazgeç</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast hidden"></div>
+
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
