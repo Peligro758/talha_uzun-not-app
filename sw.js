@@ -7,13 +7,13 @@ const CACHE = "not-app-v2";
 const ASSETS = [
   ".",
   "index.html",
-  "css/styles.css",
-  "js/app.js",
-  "js/db.js",
-  "js/brifing.js",
-  "js/seed.js",
+  "styles.css",
+  "app.js",
+  "db.js",
+  "brifing.js",
+  "seed.js",
   "manifest.webmanifest",
-  "icons/icon.svg",
+  "icon.svg",
 ];
 
 self.addEventListener("install", (e) => {
