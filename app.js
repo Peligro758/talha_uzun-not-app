@@ -57,18 +57,35 @@ function escapeHtml(s) {
   }[c]));
 }
 
-// --- Sekmeler -------------------------------------------------------------
+// --- Sekmeler (üst + alt gezinme birlikte) --------------------------------
+function switchView(view) {
+  // data-view taşıyan tüm düğmeler: üst .tab ve alt .navbtn
+  $$("[data-view]").forEach((b) =>
+    b.classList.toggle("active", b.dataset.view === view)
+  );
+  $$(".view").forEach((v) => v.classList.remove("active"));
+  const section = $(`#view-${view}`);
+  if (section) section.classList.add("active");
+  document.body.dataset.view = view; // FAB görünürlüğü CSS'ten
+  if (view === "brief") renderArchive();
+  if (view === "settings") renderSubsOverview();
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
 function setupTabs() {
-  $$(".tab").forEach((btn) => {
-    btn.onclick = () => {
-      $$(".tab").forEach((b) => b.classList.remove("active"));
-      $$(".view").forEach((v) => v.classList.remove("active"));
-      btn.classList.add("active");
-      $(`#view-${btn.dataset.view}`).classList.add("active");
-      if (btn.dataset.view === "brief") renderArchive();
-      if (btn.dataset.view === "settings") renderSubsOverview();
-    };
+  $$("[data-view]").forEach((btn) => {
+    btn.onclick = () => switchView(btn.dataset.view);
   });
+}
+
+// FAB → Notlar görünümüne geç, forma kaydır, metne odaklan, kısa vurgula.
+function newNoteQuick() {
+  switchView("notes");
+  const form = $("#note-form");
+  form.scrollIntoView({ behavior: "smooth", block: "start" });
+  form.classList.add("flash");
+  setTimeout(() => form.classList.remove("flash"), 700);
+  setTimeout(() => $("#f-text").focus({ preventScroll: true }), 320);
 }
 
 // --- Alt-kategori datalist -----------------------------------------------
@@ -185,7 +202,14 @@ async function renderNotes() {
 
   const list = $("#notes-list");
   if (!filtered.length) {
-    list.innerHTML = `<p class="muted empty">Not yok.</p>`;
+    const filtering = q || catFilter;
+    list.innerHTML = filtering
+      ? `<div class="empty"><div class="empty-ico">🔎</div>
+           <p class="empty-title">Eşleşen not yok</p>
+           <p class="muted">Aramayı veya kategori filtresini değiştir.</p></div>`
+      : `<div class="empty"><div class="empty-ico">📝</div>
+           <p class="empty-title">Henüz not yok</p>
+           <p class="muted">Yukarıdaki formdan ya da sağ alttaki <b>+</b> ile ekle.</p></div>`;
     return;
   }
   list.innerHTML = filtered
@@ -291,7 +315,9 @@ async function renderArchive() {
   briefings.sort((a, b) => b.date.localeCompare(a.date));
   const box = $("#brief-archive");
   if (!briefings.length) {
-    box.innerHTML = `<p class="muted empty">Henüz brifing kaydı yok.</p>`;
+    box.innerHTML = `<div class="empty"><div class="empty-ico">☀️</div>
+        <p class="empty-title">Henüz brifing yok</p>
+        <p class="muted">Yukarıdan bir brifing hazırlayıp kaydet.</p></div>`;
     return;
   }
   box.innerHTML = briefings
@@ -381,6 +407,8 @@ async function init() {
   await seedIfEmpty(SEED);
 
   setupTabs();
+  document.body.dataset.view = "notes";
+  $("#fab").onclick = newNoteQuick;
   $("#note-form").addEventListener("submit", onSubmitNote);
   $("#cancel-edit").onclick = resetForm;
   $("#f-category").addEventListener("change", refreshSubsDatalist);

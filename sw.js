@@ -3,7 +3,7 @@
 // dosyalar gelir (güncelleme yaptığımızda bayat sürüm takılmaz); çevrimdışıyken
 // son önbellekten çalışır. Veri IndexedDB'de olduğu için SW sadece statik dosyalar.
 
-const CACHE = "not-app-v2";
+const CACHE = "not-app-v3";
 const ASSETS = [
   ".",
   "index.html",
@@ -14,6 +14,10 @@ const ASSETS = [
   "seed.js",
   "manifest.webmanifest",
   "icon.svg",
+  "icon-192.png",
+  "icon-512.png",
+  "apple-touch-icon.png",
+  "favicon-32.png",
 ];
 
 self.addEventListener("install", (e) => {
