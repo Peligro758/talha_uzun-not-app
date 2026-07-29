@@ -80,17 +80,36 @@ function reqPromise(request) {
 // --- Notlar ---------------------------------------------------------------
 export async function allNotes() {
   await openDb();
+  const all = await reqPromise(tx(STORE_NOTES).getAll());
+  return all.filter((n) => !n.deleted); // tombstone'ları gizle
+}
+
+// Tombstone'lar dahil ham notlar (yalnızca senkron için).
+export async function allNotesRaw() {
+  await openDb();
   return reqPromise(tx(STORE_NOTES).getAll());
 }
 
 export async function putNote(note) {
   await openDb();
+  note.updatedAt = Date.now(); // yerel değişiklik damgası (senkron)
   return reqPromise(tx(STORE_NOTES, "readwrite").put(note));
 }
 
+// Senkron/birleştirme için: gelen updatedAt'i olduğu gibi koru.
+export async function putNoteRaw(note) {
+  await openDb();
+  return reqPromise(tx(STORE_NOTES, "readwrite").put(note));
+}
+
+// Yumuşak silme: kayıt tombstone olarak kalır ki silme diğer cihaza da yansısın.
 export async function deleteNote(id) {
   await openDb();
-  return reqPromise(tx(STORE_NOTES, "readwrite").delete(id));
+  const n = await getNote(id);
+  if (!n) return;
+  return reqPromise(
+    tx(STORE_NOTES, "readwrite").put({ ...n, deleted: true, updatedAt: Date.now() })
+  );
 }
 
 export async function getNote(id) {
@@ -112,8 +131,14 @@ export async function getBriefing(dateStr) {
 export async function putBriefing(dateStr, text) {
   await openDb();
   return reqPromise(
-    tx(STORE_BRIEFINGS, "readwrite").put({ date: dateStr, text })
+    tx(STORE_BRIEFINGS, "readwrite").put({ date: dateStr, text, updatedAt: Date.now() })
   );
+}
+
+// Senkron için: brifing kaydını (updatedAt dahil) olduğu gibi yaz.
+export async function putBriefingRaw(obj) {
+  await openDb();
+  return reqPromise(tx(STORE_BRIEFINGS, "readwrite").put(obj));
 }
 
 // --- Bilinen alt-kategoriler (meta) --------------------------------------
@@ -196,6 +221,50 @@ export async function importData(obj, { merge = true } = {}) {
     await setKnownSubs(out);
   }
   return { notes: imported, briefings: briefings.length };
+}
+
+// --- Senkron: anlık görüntü + birleştirme --------------------------------
+// Push için: tombstone'lar dahil tüm veri.
+export async function getSnapshot() {
+  const [notes, briefings, subs] = await Promise.all([
+    allNotesRaw(),
+    allBriefings(),
+    getKnownSubs(),
+  ]);
+  return { notes, briefings, known_subcategories: subs };
+}
+
+// İki görüntüyü birleştir: not id / brifing tarihi başına en yeni updatedAt kazanır.
+export function mergeSnapshots(a, b) {
+  a = a || {}; b = b || {};
+  const notes = new Map();
+  for (const n of [...(a.notes || []), ...(b.notes || [])]) {
+    if (!n || !n.id) continue;
+    const prev = notes.get(n.id);
+    if (!prev || (n.updatedAt || 0) >= (prev.updatedAt || 0)) notes.set(n.id, n);
+  }
+  const briefings = new Map();
+  for (const br of [...(a.briefings || []), ...(b.briefings || [])]) {
+    if (!br || !br.date) continue;
+    const prev = briefings.get(br.date);
+    if (!prev || (br.updatedAt || 0) >= (prev.updatedAt || 0)) briefings.set(br.date, br);
+  }
+  const subs = { ...DEFAULT_SUBS };
+  for (const src of [a.known_subcategories, b.known_subcategories]) {
+    if (!src) continue;
+    for (const cat of CATEGORIES) {
+      subs[cat] = [...new Set([...(subs[cat] || []), ...(src[cat] || [])])];
+    }
+  }
+  return { notes: [...notes.values()], briefings: [...briefings.values()], known_subcategories: subs };
+}
+
+// Birleştirilmiş görüntüyü IndexedDB'ye yaz (updatedAt korunur).
+export async function applySnapshot(snap) {
+  await openDb();
+  for (const n of snap.notes || []) await putNoteRaw(n);
+  for (const br of snap.briefings || []) await putBriefingRaw(br);
+  if (snap.known_subcategories) await setKnownSubs(snap.known_subcategories);
 }
 
 // İlk açılışta bir kez: mevcut CLI verisini seed et (varsa).

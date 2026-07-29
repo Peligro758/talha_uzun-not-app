@@ -132,6 +132,29 @@
         <div id="backup-status" class="status hidden"></div>
       </div>
 
+      <div class="card" id="sync-card">
+        <h3 data-i18n="sync_h3">Cihazlar arası senkron</h3>
+        <p class="muted" data-i18n="sync_intro">Mac ve telefonunda aynı notlar.</p>
+        <label>
+          <span class="lbl-txt" data-i18n="sync_url">Worker adresi</span>
+          <input id="sync-url" type="url" autocomplete="off" spellcheck="false"
+                 placeholder="https://...workers.dev" />
+        </label>
+        <label>
+          <span class="lbl-txt" data-i18n="sync_code">Sync-kodu</span>
+          <div class="rem-inputs">
+            <input id="sync-code" type="text" autocomplete="off" spellcheck="false"
+                   placeholder="XXXX-XXXX-XXXX" />
+            <button type="button" id="sync-gen" class="ghost" data-i18n="sync_gen">Üret</button>
+          </div>
+        </label>
+        <div class="form-actions">
+          <button id="sync-now" class="primary" data-i18n="sync_now">🔄 Şimdi senkronla</button>
+          <button id="sync-copy" class="ghost" data-i18n="sync_copy">Bağlantıyı kopyala</button>
+        </div>
+        <div id="sync-status" class="status hidden"></div>
+      </div>
+
       <div class="card">
         <h3 data-i18n="lang_h3">Dil / Language</h3>
         <p class="muted" data-i18n="lang_hint">Uygulama dilini seç. Brifing metni de seçilen dilde üretilir.</p>

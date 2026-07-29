@@ -21,6 +21,14 @@ import { buildPayload, todayStr } from "./brifing.js";
 import { SEED } from "./seed.js";
 import { t, catLabel, getLang, setLang } from "./i18n.js";
 import { downloadIcs } from "./ics.js";
+import {
+  syncNow,
+  getConfig,
+  setConfig,
+  generateCode,
+  isConfigured,
+  getLastSync,
+} from "./sync.js";
 
 const $ = (sel) => document.querySelector(sel);
 const $$ = (sel) => [...document.querySelectorAll(sel)];
@@ -203,6 +211,7 @@ async function onSubmitNote(e) {
   resetForm();
   await refreshSubsDatalist();
   await renderNotes();
+  scheduleSync();
 }
 
 async function startEdit(id) {
@@ -227,6 +236,7 @@ async function removeNote(id) {
   await deleteNote(id);
   toast(t("t_note_deleted"));
   await renderNotes();
+  scheduleSync();
 }
 
 // Hatırlatmayı tamamla: notu silmeden reminder'ı temizler (artık "Bugün"de çıkmaz).
@@ -236,6 +246,7 @@ async function completeReminder(id) {
   await putNote({ ...n, reminder: null });
   toast(t("t_rem_done"));
   await renderNotes();
+  scheduleSync();
 }
 
 // --- Not listesi ----------------------------------------------------------
@@ -370,6 +381,7 @@ async function saveBriefing() {
   $("#brief-save-status").textContent = t("st_saved", { date: today });
   toast(t("t_brief_saved"));
   await renderArchive();
+  scheduleSync();
 }
 
 async function renderArchive() {
@@ -442,6 +454,7 @@ async function importBackup(file) {
     await renderNotes();
     await renderArchive();
     await renderSubsOverview();
+    scheduleSync();
   } catch (err) {
     toast(t("t_import_fail"));
   }
@@ -453,6 +466,95 @@ async function renderSubsOverview() {
     const vals = (subs[c] || []).map((s) => `<span class="chip chip-${c}">${escapeHtml(s)}</span>`).join(" ");
     return `<div class="subs-row"><b>${catLabel(c)}:</b> ${vals || `<span class="muted">${t("subs_empty")}</span>`}</div>`;
   }).join("");
+}
+
+// --- Senkron --------------------------------------------------------------
+function fmtTime(ts) {
+  if (!ts) return "";
+  const loc = getLang() === "tr" ? "tr-TR" : "en-US";
+  return new Date(ts).toLocaleString(loc, {
+    day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit",
+  });
+}
+
+function setSyncStatus(text) {
+  const el = $("#sync-status");
+  el.textContent = text;
+  el.classList.remove("hidden");
+}
+
+function saveSyncFields() {
+  setConfig({ url: $("#sync-url").value, code: $("#sync-code").value });
+}
+
+let syncing = false;
+async function doSync(manual) {
+  if (!isConfigured()) {
+    if (manual) setSyncStatus(t("sync_err_cfg"));
+    return;
+  }
+  if (syncing) return;
+  syncing = true;
+  setSyncStatus(t("sync_running"));
+  const res = await syncNow();
+  syncing = false;
+
+  if (res.ok) {
+    setSyncStatus(t("sync_ok", { n: res.notes, time: fmtTime(getLastSync()) }));
+    // Gelen değişiklikleri ekrana yansıt.
+    await refreshSubsDatalist();
+    await renderNotes();
+    await renderArchive();
+    await renderSubsOverview();
+  } else if (res.reason === "decrypt") {
+    setSyncStatus(t("sync_err_code"));
+  } else if (res.reason === "not-configured") {
+    if (manual) setSyncStatus(t("sync_err_cfg"));
+  } else {
+    setSyncStatus(t("sync_err_net"));
+  }
+}
+
+let syncTimer = null;
+function scheduleSync() {
+  if (!isConfigured()) return;
+  clearTimeout(syncTimer);
+  syncTimer = setTimeout(() => doSync(false), 2500);
+}
+
+function setupSync() {
+  const cfg = getConfig();
+  $("#sync-url").value = cfg.url;
+  $("#sync-code").value = cfg.code;
+  if (getLastSync()) setSyncStatus(t("sync_last", { time: fmtTime(getLastSync()) }));
+
+  // Adres kutusuna "adres#kod" yapıştırılırsa ikiye böl.
+  $("#sync-url").addEventListener("input", () => {
+    const v = $("#sync-url").value;
+    if (v.includes("#")) {
+      const [u, c] = v.split("#");
+      $("#sync-url").value = u.trim();
+      if (c) $("#sync-code").value = c.trim();
+    }
+    saveSyncFields();
+  });
+  $("#sync-code").addEventListener("input", saveSyncFields);
+  $("#sync-gen").onclick = () => {
+    $("#sync-code").value = generateCode();
+    saveSyncFields();
+  };
+  $("#sync-now").onclick = () => doSync(true);
+  $("#sync-copy").onclick = async () => {
+    saveSyncFields();
+    const { url, code } = getConfig();
+    if (!url) return setSyncStatus(t("sync_err_cfg"));
+    try {
+      await navigator.clipboard.writeText(`${url}#${code}`);
+      toast(t("sync_copied"));
+    } catch (_) {
+      setSyncStatus(`${url}#${code}`);
+    }
+  };
 }
 
 // --- PWA service worker ---------------------------------------------------
@@ -491,9 +593,14 @@ async function init() {
     e.target.value = "";
   });
 
+  setupSync();
+
   await refreshSubsDatalist();
   await renderNotes();
   registerSW();
+
+  // Açılışta bir kez senkronla (yapılandırılmışsa) — arka planda.
+  if (isConfigured()) doSync(false);
 }
 
 init();
