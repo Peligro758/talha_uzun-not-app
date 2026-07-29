@@ -3,7 +3,7 @@
 // dosyalar gelir (güncelleme yaptığımızda bayat sürüm takılmaz); çevrimdışıyken
 // son önbellekten çalışır. Veri IndexedDB'de olduğu için SW sadece statik dosyalar.
 
-const CACHE = "not-app-v4";
+const CACHE = "not-app-v5";
 const ASSETS = [
   ".",
   "index.html",
@@ -13,6 +13,7 @@ const ASSETS = [
   "brifing.js",
   "seed.js",
   "i18n.js",
+  "ics.js",
   "manifest.webmanifest",
   "icon.svg",
   "icon-192.png",

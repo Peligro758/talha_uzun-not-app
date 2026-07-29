@@ -20,6 +20,7 @@ import {
 import { buildPayload, todayStr } from "./brifing.js";
 import { SEED } from "./seed.js";
 import { t, catLabel, getLang, setLang } from "./i18n.js";
+import { downloadIcs } from "./ics.js";
 
 const $ = (sel) => document.querySelector(sel);
 const $$ = (sel) => [...document.querySelectorAll(sel)];
@@ -142,6 +143,7 @@ function resetForm() {
   $("#note-id").value = "";
   $("#f-subcategory").value = "";
   $("#f-reminder").value = "";
+  $("#f-reminder-time").value = "";
   $("#f-text").value = "";
   $("#form-title").textContent = t("form_new");
   $("#save-btn").textContent = t("btn_add");
@@ -154,6 +156,8 @@ async function onSubmitNote(e) {
   const category = $("#f-category").value;
   const subcategory = $("#f-subcategory").value.trim();
   const reminder = $("#f-reminder").value || null;
+  // Saat yalnızca bir tarih varsa anlamlı.
+  const reminderTime = reminder ? ($("#f-reminder-time").value || null) : null;
   const text = $("#f-text").value.trim();
 
   if (!subcategory) return toast(t("t_sub_empty"));
@@ -167,21 +171,35 @@ async function onSubmitNote(e) {
     await addKnownSub(category, subcategory);
   }
 
+  let saved;
   if (id) {
     const existing = await getNote(id);
-    await putNote({ ...existing, category, subcategory, reminder, text });
+    saved = { ...existing, category, subcategory, reminder, reminderTime, text };
+    await putNote(saved);
     toast(t("t_note_updated"));
   } else {
-    await putNote({
+    saved = {
       id: newUlid(),
       category,
       subcategory,
       date: todayStr(),
       reminder,
+      reminderTime,
       text,
-    });
+    };
+    await putNote(saved);
     toast(t("t_note_added"));
   }
+
+  // Hatırlatma varsa takvime eklemeyi öner.
+  if (saved.reminder) {
+    const addCal = await confirmModal(t("m_add_cal"), t("m_ok_addcal"));
+    if (addCal) {
+      downloadIcs(saved);
+      toast(t("t_cal_added"));
+    }
+  }
+
   resetForm();
   await refreshSubsDatalist();
   await renderNotes();
@@ -195,6 +213,7 @@ async function startEdit(id) {
   await refreshSubsDatalist();
   $("#f-subcategory").value = n.subcategory;
   $("#f-reminder").value = n.reminder || "";
+  $("#f-reminder-time").value = n.reminderTime || "";
   $("#f-text").value = n.text;
   $("#form-title").textContent = t("form_edit");
   $("#save-btn").textContent = t("btn_save");
@@ -253,12 +272,15 @@ async function renderNotes() {
       const cat = catLabel(n.category);
       let remBadge = "";
       let completeBtn = "";
+      let calBtn = "";
       if (n.reminder) {
         const overdue = n.reminder < today;
         const dueToday = n.reminder === today;
         const cls = overdue ? "overdue" : dueToday ? "due" : "";
         const tag = overdue ? t("tag_overdue") : dueToday ? t("tag_today") : "";
-        remBadge = `<span class="badge ${cls}">⏰ ${n.reminder}${tag}</span>`;
+        const timeStr = n.reminderTime ? ` ${n.reminderTime}` : "";
+        remBadge = `<span class="badge ${cls}">⏰ ${n.reminder}${timeStr}${tag}</span>`;
+        calBtn = `<button class="mini cal" data-cal="${n.id}">${t("btn_addcal")}</button>`;
         if (n.reminder <= today) {
           completeBtn = `<button class="mini ok" data-done="${n.id}">${t("btn_complete")}</button>`;
         }
@@ -273,6 +295,7 @@ async function renderNotes() {
         <div class="note-text">${escapeHtml(n.text)}</div>
         <div class="note-actions">
           ${completeBtn}
+          ${calBtn}
           <button class="mini" data-edit="${n.id}">${t("btn_edit")}</button>
           <button class="mini danger" data-del="${n.id}">${t("btn_delete")}</button>
         </div>
@@ -288,6 +311,15 @@ async function renderNotes() {
   });
   list.querySelectorAll("[data-done]").forEach((b) => {
     b.onclick = () => completeReminder(b.dataset.done);
+  });
+  list.querySelectorAll("[data-cal]").forEach((b) => {
+    b.onclick = async () => {
+      const n = await getNote(b.dataset.cal);
+      if (n) {
+        downloadIcs(n);
+        toast(t("t_cal_added"));
+      }
+    };
   });
 }
 

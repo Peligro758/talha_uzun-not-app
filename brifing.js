@@ -23,7 +23,10 @@ function parseDate(s) {
 function fmtNote(n) {
   const cat = catLabel(n.category);
   let head = `- (${n.date}) [${cat}/${n.subcategory}]`;
-  if (n.reminder) head += ` [${t("rem_label")}: ${n.reminder}]`;
+  if (n.reminder) {
+    const rt = n.reminderTime ? ` ${n.reminderTime}` : "";
+    head += ` [${t("rem_label")}: ${n.reminder}${rt}]`;
+  }
   const body = (n.text || "").replace(/\n/g, "\n  ");
   return `${head}\n  ${body}`;
 }

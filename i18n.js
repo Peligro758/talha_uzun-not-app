@@ -87,6 +87,11 @@ const DICT = {
     t_import_fail: "Dosya okunamadı — geçerli bir JSON mu?",
     t_exported: "Yedek indirildi.",
     m_ok_default: "Tamam",
+    // Takvim hatırlatma
+    btn_addcal: "📅 Takvime ekle",
+    m_add_cal: "Bu hatırlatmayı takvime ekleyeyim mi? Takvim, zamanı gelince bildirim verir.",
+    m_ok_addcal: "Takvime ekle",
+    t_cal_added: "Takvim dosyası hazır — açılan pencereden ekle.",
     // Brifing içeriği (Claude'a giden)
     bum_date: "Bugünün tarihi: {date}",
     bum_due_head: "### Bugüne düşen ve gecikmiş hatırlatmalar",
@@ -193,6 +198,11 @@ Kısa tut. Uydurma; sadece verilen notlara dayan. Abartılı motivasyon dili kul
     t_import_fail: "Couldn't read the file — is it valid JSON?",
     t_exported: "Backup downloaded.",
     m_ok_default: "OK",
+    // Calendar reminder
+    btn_addcal: "📅 Add to calendar",
+    m_add_cal: "Add this reminder to your calendar? Your calendar will notify you when it's time.",
+    m_ok_addcal: "Add to calendar",
+    t_cal_added: "Calendar file ready — add it from the dialog that opens.",
     // Briefing content (sent to Claude)
     bum_date: "Today's date: {date}",
     bum_due_head: "### Reminders due today and overdue",

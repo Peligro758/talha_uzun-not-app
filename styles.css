@@ -134,6 +134,10 @@ input:focus, select:focus, textarea:focus {
   box-shadow: 0 0 0 3px var(--ring);
 }
 
+.rem-inputs { display: flex; gap: 8px; }
+.rem-inputs input[type="date"] { flex: 1 1 60%; }
+.rem-inputs input[type="time"] { flex: 1 1 40%; }
+
 .form-actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 4px; }
 
 button {
@@ -200,6 +204,8 @@ button.ghost:hover { background: var(--card-2); border-color: var(--primary); }
 .mini.danger:hover { background: color-mix(in srgb, var(--danger) 16%, transparent); border-color: var(--danger); }
 .mini.ok { color: var(--hayat); border-color: color-mix(in srgb, var(--hayat) 45%, transparent); }
 .mini.ok:hover { background: color-mix(in srgb, var(--hayat) 16%, transparent); border-color: var(--hayat); }
+.mini.cal { color: var(--primary); border-color: color-mix(in srgb, var(--primary) 45%, transparent); }
+.mini.cal:hover { background: var(--primary-soft); border-color: var(--primary); }
 
 .muted { color: var(--muted); font-size: 13px; }
 
