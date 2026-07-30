@@ -163,9 +163,12 @@ async function onSubmitNote(e) {
   const id = $("#note-id").value;
   const category = $("#f-category").value;
   const subcategory = $("#f-subcategory").value.trim();
-  const reminder = $("#f-reminder").value || null;
+  let reminder = $("#f-reminder").value || null;
+  const timeVal = $("#f-reminder-time").value || null;
+  // Saat girildiyse ama tarih boşsa: saat kaybolmasın, tarihi bugüne çek.
+  if (timeVal && !reminder) reminder = todayStr();
   // Saat yalnızca bir tarih varsa anlamlı.
-  const reminderTime = reminder ? ($("#f-reminder-time").value || null) : null;
+  const reminderTime = reminder ? timeVal : null;
   const text = $("#f-text").value.trim();
 
   if (!subcategory) return toast(t("t_sub_empty"));

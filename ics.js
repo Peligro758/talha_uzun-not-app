@@ -53,7 +53,7 @@ export function buildReminderIcs(note) {
       `${endD.getFullYear()}${pad(endD.getMonth() + 1)}${pad(endD.getDate())}` +
       `T${pad(endD.getHours())}${pad(endD.getMinutes())}00`;
     lines.push(`DTSTART:${start}`, `DTEND:${end}`);
-    trigger = "-PT0M"; // etkinlik anında
+    trigger = "PT0S"; // etkinlik anında
   } else {
     const next = new Date(Number(y), Number(m) - 1, Number(d) + 1);
     const nextYmd = `${next.getFullYear()}${pad(next.getMonth() + 1)}${pad(next.getDate())}`;
